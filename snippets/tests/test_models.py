@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from rest_framework.test import APITestCase
+from django.test import TestCase
 
 from snippets.tests.factories import SnippetFactory
 
 
-class SnippetsModelTest(APITestCase):
+class SnippetsModelTest(TestCase):
     def setUp(self):
         self.snippet = SnippetFactory()
 
@@ -30,3 +30,8 @@ class SnippetsModelTest(APITestCase):
         self.assertIsInstance(self.snippet.language, str)
         self.assertIsInstance(self.snippet.style, str)
         self.assertIsInstance(self.snippet.highlighted, str)
+
+    def test_it_has_an_alternative_primary_key(self):
+        self.assertTrue(hasattr(self.snippet, 'key'))
+        self.assertIsInstance(self.snippet.key, str)
+        self.assertEquals(4, len(self.snippet.key))

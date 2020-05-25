@@ -3,10 +3,10 @@ from datetime import datetime
 
 import factory
 
-from snippets.models import Snippet
+from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 
 
-class SnippetFactory(factory.Factory):
+class SnippetFactory(factory.DjangoModelFactory):
     class Meta:
         model = Snippet
 
@@ -15,5 +15,5 @@ class SnippetFactory(factory.Factory):
     title = factory.Faker('sentence')
     code = factory.Faker('paragraph').generate()
     has_line_numbers = factory.Faker('boolean')
-    language = random.choice(Snippet.LANGUAGE_CHOICES)[0]
-    style = random.choice(Snippet.STYLE_CHOICES)[0]
+    language = random.choice(LANGUAGE_CHOICES)[0]
+    style = random.choice(STYLE_CHOICES)[0]
