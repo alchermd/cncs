@@ -33,6 +33,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # Project internal apps
+    'snippets.apps.SnippetsConfig',
+
+    # Django internal apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
