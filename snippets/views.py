@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from rest_framework.viewsets import ModelViewSet
 
-# Create your views here.
+from snippets.models import Snippet
+from snippets.serializers import SnippetSerializer
+
+
+class SnippetsViewSet(ModelViewSet):
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
