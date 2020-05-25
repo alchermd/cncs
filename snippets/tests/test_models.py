@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from rest_framework.test import APITestCase
+from django.test import TestCase
 
 from snippets.tests.factories import SnippetFactory
 
 
-class SnippetsModelTest(APITestCase):
+class SnippetsModelTest(TestCase):
     def setUp(self):
         self.snippet = SnippetFactory()
 
