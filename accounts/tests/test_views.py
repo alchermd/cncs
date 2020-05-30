@@ -1,8 +1,11 @@
 from django.urls import reverse
+from oauth2_provider.models import AccessToken, RefreshToken
+from rest_framework import status
 from rest_framework.test import APITestCase
 
+from accounts.helpers import generate_tokens
 from accounts.models import Account
-from accounts.tests.factories import AccountFactory
+from accounts.tests.factories import AccountFactory, ApplicationFactory
 
 
 class AccountsViewsTest(APITestCase):
@@ -76,3 +79,57 @@ class AccountsViewsTest(APITestCase):
 
         self.assertEquals(204, response.status_code)
         self.assertEquals(0, Account.objects.count())
+
+
+class AuthenticationTest(APITestCase):
+    def setUp(self):
+        self.app = ApplicationFactory()
+
+    def test_an_account_can_be_registered(self):
+        payload = {
+            'email': 'russ_morgan@gmail.com',
+            'password1': 'p@ssw0rd!',
+            'password2': 'p@ssw0rd!',
+            'client_id': self.app.client_id,
+            'client_secret': self.app.client_secret,
+        }
+
+        response = self.client.post(reverse('accounts:register'), payload)
+        access_token = AccessToken.objects.get(user__email=payload['email'])
+        refresh_token = RefreshToken.objects.get(access_token=access_token)
+
+        self.assertEquals(status.HTTP_201_CREATED, response.status_code)
+        self.assertEquals(access_token.token, response.data['access_token'])
+        self.assertEquals(refresh_token.token, response.data['refresh_token'])
+
+    def test_credentials_can_be_used_to_login(self):
+        account = AccountFactory()
+        account.set_password('p@ssw0rd!')
+        account.save()
+
+        payload = {
+            'email': account.email,
+            'password': 'p@ssw0rd!',
+            'client_id': self.app.client_id,
+            'client_secret': self.app.client_secret,
+        }
+
+        response = self.client.post(reverse('accounts:login'), payload)
+        access_token = AccessToken.objects.get(user__email=payload['email'])
+        refresh_token = RefreshToken.objects.get(access_token=access_token)
+
+        self.assertEquals(access_token.token, response.data['access_token'])
+        self.assertEquals(refresh_token.token, response.data['refresh_token'])
+
+    def test_user_can_be_logged_out(self):
+        app = ApplicationFactory()
+        account = AccountFactory()
+        access_token, refresh_token = generate_tokens(app, account)
+        payload = {
+            'access_token': access_token.token,
+        }
+
+        response = self.client.post(reverse('accounts:logout'), payload)
+
+        self.assertEquals(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEquals(0, AccessToken.objects.count())

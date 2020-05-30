@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'snippets.apps.SnippetsConfig',
 
+    # 3rd party apps
+    'oauth2_provider',
+
     # Django internal apps
     'django.contrib.admin',
     'django.contrib.auth',
