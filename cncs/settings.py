@@ -34,7 +34,11 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # Project internal apps
+    'accounts.apps.AccountsConfig',
     'snippets.apps.SnippetsConfig',
+
+    # 3rd party apps
+    'oauth2_provider',
 
     # Django internal apps
     'django.contrib.admin',
@@ -122,3 +126,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Custom Authentication
+AUTH_USER_MODEL = 'accounts.Account'
