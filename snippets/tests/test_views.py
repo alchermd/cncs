@@ -1,8 +1,11 @@
 import random
 
 from django.urls import reverse
+from rest_framework import status
 from rest_framework.test import APITestCase
 
+from accounts.helpers import generate_tokens
+from accounts.tests.factories import AccountFactory, ApplicationFactory
 from snippets.models import Snippet
 from snippets.tests.factories import SnippetFactory
 
@@ -74,3 +77,25 @@ class SnippetViewsTest(APITestCase):
         self.client.delete(reverse('snippets:snippet-detail', args=[snippet.key]))
 
         self.assertEquals(Snippet.objects.count(), 0)
+
+    def test_creating_a_snippet_while_logged_in_will_assign_the_user_as_the_snippets_owner(self):
+        app = ApplicationFactory()
+        account = AccountFactory()
+        account.set_password('p@ssw0rd!')
+        account.save()
+        access_token, _ = generate_tokens(app, account)
+        headers = {
+            'HTTP_AUTHORIZATION': 'Bearer ' + access_token.token
+        }
+        payload = {
+            'title': 'My First C Program',
+            'code': '#include <stdio.h>\nint main(){\nreturn 0;\n}',
+            'language': 'c',
+            'has_line_numbers': True,
+        }
+
+        response = self.client.post(reverse('snippets:snippet-list'), payload, **headers)
+        snippet = Snippet.objects.first()
+
+        self.assertEquals(status.HTTP_201_CREATED, response.status_code)
+        self.assertEquals(account, snippet.owner)
