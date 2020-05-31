@@ -7,6 +7,9 @@ from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import get_all_lexers, get_lexer_by_name
 from pygments.styles import get_all_styles
 
+from accounts.models import Account
+from commons.models import TimestampedModel
+
 LEXERS = [item for item in get_all_lexers() if item[1]]
 LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
 STYLE_CHOICES = sorted((item, item) for item in get_all_styles())
@@ -20,15 +23,8 @@ def generate_key(length):
     return ''.join(characters)
 
 
-class TimestampedModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
 class Snippet(TimestampedModel):
+    key = models.CharField(max_length=4, primary_key=True)
     title = models.CharField(max_length=100, blank=True, default='')
     code = models.TextField()
     has_line_numbers = models.BooleanField(default=False)
@@ -37,7 +33,7 @@ class Snippet(TimestampedModel):
     style = models.CharField(
         choices=STYLE_CHOICES, default='friendly', max_length=100)
     highlighted = models.TextField()
-    key = models.CharField(max_length=4, primary_key=True)
+    owner = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
 
     def save(self, *args, **kwargs):
         # Use the `pygments` library to create a highlighted HTML representation of the code snippet.

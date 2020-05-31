@@ -6,7 +6,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from accounts.managers import AccountManager
-from snippets.models import TimestampedModel
+from commons.models import TimestampedModel
 
 
 class Account(AbstractUser, TimestampedModel):
