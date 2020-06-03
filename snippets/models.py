@@ -1,6 +1,7 @@
 import random
 import string
 
+from django.contrib.auth.hashers import make_password
 from django.db import models
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
@@ -33,6 +34,7 @@ class Snippet(TimestampedModel):
     style = models.CharField(
         choices=STYLE_CHOICES, default='friendly', max_length=100)
     highlighted = models.TextField()
+    password = models.CharField(max_length=128, null=True)
     owner = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
 
     def save(self, *args, **kwargs):
@@ -55,3 +57,8 @@ class Snippet(TimestampedModel):
                     break
 
         super(Snippet, self).save(*args, **kwargs)
+
+    def set_password(self, password):
+        self.password = make_password(password)
+        self.save()
+        return self

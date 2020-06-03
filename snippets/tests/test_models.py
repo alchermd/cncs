@@ -48,3 +48,14 @@ class SnippetsModelTest(TestCase):
 
         snippet = Snippet.objects.get(pk=self.snippet.key)
         self.assertEquals(snippet.owner, account)
+
+    def test_it_can_have_a_password(self):
+        account = AccountFactory()
+        self.snippet.owner = account
+        self.snippet.save()
+
+        self.snippet.set_password('p@ssw0rd!')
+        snippet = Snippet.objects.get(pk=self.snippet.key)
+
+        self.assertIsNotNone(snippet.password)
+        self.assertNotEquals('p@ssw0rd!', snippet.password)
