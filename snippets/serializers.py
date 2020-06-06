@@ -12,3 +12,13 @@ class SnippetSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='snippets:snippet-detail')
     highlighted = serializers.ReadOnlyField()
     owner = AccountSerializer(required=False)
+
+
+class PasswordSerializer(serializers.Serializer):
+    password1 = serializers.CharField()
+    password2 = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs.get('password1') != attrs.get('password2'):
+            raise serializers.ValidationError('Passwords does not match')
+        return attrs

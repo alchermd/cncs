@@ -1,3 +1,4 @@
+import json
 import random
 
 from django.urls import reverse
@@ -99,3 +100,29 @@ class SnippetViewsTest(APITestCase):
 
         self.assertEquals(status.HTTP_201_CREATED, response.status_code)
         self.assertEquals(account, snippet.owner)
+
+    def test_can_set_a_snippets_password(self):
+        account = AccountFactory()
+        app = ApplicationFactory()
+        access_token, _ = generate_tokens(app, account)
+        snippet = SnippetFactory(owner=account)
+        headers = {
+            'HTTP_AUTHORIZATION': f'Bearer {access_token.token}'
+        }
+        payload = {
+            'password1': 'p@ssw0rd!',
+            'password2': 'p@ssw0rd!',
+        }
+
+        response = self.client.post(reverse('snippets:snippet-set-password', args=[snippet.key]), json.dumps(payload),
+                                    **headers,
+                                    content_type='application/json')
+        snippet.refresh_from_db()
+
+        self.assertTrue(snippet.password)
+
+        response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]))
+        self.assertEquals(status.HTTP_403_FORBIDDEN, response.status_code)
+
+        response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]), **headers)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)

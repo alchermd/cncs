@@ -1,10 +1,14 @@
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from oauth2_provider.decorators import protected_resource
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from accounts.helpers import get_token_owner
 from snippets.models import Snippet
-from snippets.serializers import SnippetSerializer
+from snippets.serializers import SnippetSerializer, PasswordSerializer
 
 
 class SnippetsViewSet(ModelViewSet):
@@ -24,3 +28,29 @@ class SnippetsViewSet(ModelViewSet):
                 return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
             return super(SnippetsViewSet, self).create(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        snippet = get_object_or_404(Snippet, pk=pk)
+        if snippet.password:
+            account = get_token_owner(request)
+
+            if snippet.owner != account:
+                return Response({'detail': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
+
+        return super(SnippetsViewSet, self).retrieve(request, *args, **kwargs)
+
+
+@transaction.atomic()
+@protected_resource()
+@api_view(['POST'])
+def set_password(request, pk):
+    snippet = get_object_or_404(Snippet, pk=pk)
+    context = {'request': request}
+
+    serializer = PasswordSerializer(data=request.data)
+    if serializer.is_valid():
+        snippet.set_password(serializer.data['password1'])
+        snippet.save()
+        return Response(SnippetSerializer(instance=snippet, context=context).data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
