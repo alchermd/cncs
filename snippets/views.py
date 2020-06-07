@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from oauth2_provider.decorators import protected_resource
@@ -6,7 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from accounts.helpers import get_token_owner
+from accounts.helpers import get_token_owner, get_password_token
 from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer, PasswordSerializer
 
@@ -32,10 +33,15 @@ class SnippetsViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs.get('pk', None)
         snippet = get_object_or_404(Snippet, pk=pk)
-        if snippet.password:
-            account = get_token_owner(request)
 
-            if snippet.owner != account:
+        if snippet.password:
+            password = get_password_token(request)
+            password_is_invalid = password is None or not check_password(password, snippet.password)
+
+            account = get_token_owner(request)
+            token_is_invalid = snippet.owner != account
+
+            if password_is_invalid and token_is_invalid:
                 return Response({'detail': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
 
         return super(SnippetsViewSet, self).retrieve(request, *args, **kwargs)

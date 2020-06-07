@@ -126,3 +126,16 @@ class SnippetViewsTest(APITestCase):
 
         response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]), **headers)
         self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+    def test_a_private_snippet_can_be_accessed_if_the_correct_password_is_given(self):
+        snippet = SnippetFactory(owner=AccountFactory())
+        snippet.set_password('p@ssw0rd!')
+        snippet.save()
+
+        headers = {
+            'HTTP_AUTHORIZATION': 'Password p@ssw0rd!'
+        }
+
+        response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]), **headers)
+
+        self.assertEquals(status.HTTP_200_OK, response.status_code)

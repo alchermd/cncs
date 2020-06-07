@@ -30,3 +30,13 @@ def get_token_owner(request, identifier='Bearer'):
         return AccessToken.objects.get(token=access_token).user
     except AccessToken.DoesNotExist:
         return None
+
+
+def get_password_token(request, identifier='Password'):
+    """
+
+    """
+    if not (auth_string := request.headers.get('AUTHORIZATION')):
+        return None
+
+    return auth_string[len(identifier) + 1:]
