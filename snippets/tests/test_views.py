@@ -24,9 +24,12 @@ class SnippetViewsTest(APITestCase):
 
         response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]))
 
+        self.assertEquals(snippet.key, response.data['key'])
         self.assertEquals(snippet.title, response.data['title'])
         self.assertEquals(snippet.code, response.data['code'])
         self.assertEquals(snippet.has_line_numbers, response.data['has_line_numbers'])
+        # Password should not be included
+        self.assertFalse(response.data.get('password'))
 
     def test_can_edit_a_specific_snippet(self):
         snippet = SnippetFactory(
