@@ -1,4 +1,4 @@
-# cncs
+# cncs [![Build Status](https://travis-ci.com/alchermd/cncs.svg?branch=master)](https://travis-ci.com/alchermd/cncs)
 
 A note sharing service tailored for Markdown and code snippets
 
