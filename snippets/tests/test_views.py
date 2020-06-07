@@ -1,8 +1,12 @@
+import json
 import random
 
 from django.urls import reverse
+from rest_framework import status
 from rest_framework.test import APITestCase
 
+from accounts.helpers import generate_tokens
+from accounts.tests.factories import AccountFactory, ApplicationFactory
 from snippets.models import Snippet
 from snippets.tests.factories import SnippetFactory
 
@@ -20,9 +24,12 @@ class SnippetViewsTest(APITestCase):
 
         response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]))
 
+        self.assertEquals(snippet.key, response.data['key'])
         self.assertEquals(snippet.title, response.data['title'])
         self.assertEquals(snippet.code, response.data['code'])
         self.assertEquals(snippet.has_line_numbers, response.data['has_line_numbers'])
+        # Password should not be included
+        self.assertFalse(response.data.get('password'))
 
     def test_can_edit_a_specific_snippet(self):
         snippet = SnippetFactory(
@@ -74,3 +81,64 @@ class SnippetViewsTest(APITestCase):
         self.client.delete(reverse('snippets:snippet-detail', args=[snippet.key]))
 
         self.assertEquals(Snippet.objects.count(), 0)
+
+    def test_creating_a_snippet_while_logged_in_will_assign_the_user_as_the_snippets_owner(self):
+        app = ApplicationFactory()
+        account = AccountFactory()
+        account.set_password('p@ssw0rd!')
+        account.save()
+        access_token, _ = generate_tokens(app, account)
+        headers = {
+            'HTTP_AUTHORIZATION': 'Bearer ' + access_token.token
+        }
+        payload = {
+            'title': 'My First C Program',
+            'code': '#include <stdio.h>\nint main(){\nreturn 0;\n}',
+            'language': 'c',
+            'has_line_numbers': True,
+        }
+
+        response = self.client.post(reverse('snippets:snippet-list'), payload, **headers)
+        snippet = Snippet.objects.first()
+
+        self.assertEquals(status.HTTP_201_CREATED, response.status_code)
+        self.assertEquals(account, snippet.owner)
+
+    def test_can_set_a_snippets_password(self):
+        account = AccountFactory()
+        app = ApplicationFactory()
+        access_token, _ = generate_tokens(app, account)
+        snippet = SnippetFactory(owner=account)
+        headers = {
+            'HTTP_AUTHORIZATION': f'Bearer {access_token.token}'
+        }
+        payload = {
+            'password1': 'p@ssw0rd!',
+            'password2': 'p@ssw0rd!',
+        }
+
+        response = self.client.post(reverse('snippets:snippet-set-password', args=[snippet.key]), json.dumps(payload),
+                                    **headers,
+                                    content_type='application/json')
+        snippet.refresh_from_db()
+
+        self.assertTrue(snippet.password)
+
+        response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]))
+        self.assertEquals(status.HTTP_403_FORBIDDEN, response.status_code)
+
+        response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]), **headers)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+    def test_a_private_snippet_can_be_accessed_if_the_correct_password_is_given(self):
+        snippet = SnippetFactory(owner=AccountFactory())
+        snippet.set_password('p@ssw0rd!')
+        snippet.save()
+
+        headers = {
+            'HTTP_AUTHORIZATION': 'Password p@ssw0rd!'
+        }
+
+        response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]), **headers)
+
+        self.assertEquals(status.HTTP_200_OK, response.status_code)

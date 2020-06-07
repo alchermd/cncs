@@ -10,4 +10,4 @@ before_script:
 script:
   - python manage.py test
 env:
-  - DB_DATABASE=cncs DB_USER=postgres DB_PASSWORD=
+  - ENV=travis DB_DATABASE=cncs DB_USER=postgres DB_PASSWORD=

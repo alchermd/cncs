@@ -2,6 +2,8 @@ from datetime import datetime
 
 from django.test import TestCase
 
+from accounts.tests.factories import AccountFactory
+from snippets.models import Snippet
 from snippets.tests.factories import SnippetFactory
 
 
@@ -35,3 +37,25 @@ class SnippetsModelTest(TestCase):
         self.assertTrue(hasattr(self.snippet, 'key'))
         self.assertIsInstance(self.snippet.key, str)
         self.assertEquals(4, len(self.snippet.key))
+
+    def test_it_can_have_an_owner(self):
+        self.assertTrue(hasattr(self.snippet, 'owner'))
+        self.assertIsNone(self.snippet.owner)
+
+        account = AccountFactory()
+        self.snippet.owner = account
+        self.snippet.save()
+
+        snippet = Snippet.objects.get(pk=self.snippet.key)
+        self.assertEquals(snippet.owner, account)
+
+    def test_it_can_have_a_password(self):
+        account = AccountFactory()
+        self.snippet.owner = account
+        self.snippet.save()
+
+        self.snippet.set_password('p@ssw0rd!')
+        snippet = Snippet.objects.get(pk=self.snippet.key)
+
+        self.assertIsNotNone(snippet.password)
+        self.assertNotEquals('p@ssw0rd!', snippet.password)

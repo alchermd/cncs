@@ -1,11 +1,15 @@
 import random
 import string
 
+from django.contrib.auth.hashers import make_password
 from django.db import models
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import get_all_lexers, get_lexer_by_name
 from pygments.styles import get_all_styles
+
+from accounts.models import Account
+from commons.models import TimestampedModel
 
 LEXERS = [item for item in get_all_lexers() if item[1]]
 LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
@@ -20,15 +24,8 @@ def generate_key(length):
     return ''.join(characters)
 
 
-class TimestampedModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
 class Snippet(TimestampedModel):
+    key = models.CharField(max_length=4, primary_key=True)
     title = models.CharField(max_length=100, blank=True, default='')
     code = models.TextField()
     has_line_numbers = models.BooleanField(default=False)
@@ -37,7 +34,8 @@ class Snippet(TimestampedModel):
     style = models.CharField(
         choices=STYLE_CHOICES, default='friendly', max_length=100)
     highlighted = models.TextField()
-    key = models.CharField(max_length=4, primary_key=True)
+    password = models.CharField(max_length=128, null=True)
+    owner = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
 
     def save(self, *args, **kwargs):
         # Use the `pygments` library to create a highlighted HTML representation of the code snippet.
@@ -59,3 +57,8 @@ class Snippet(TimestampedModel):
                     break
 
         super(Snippet, self).save(*args, **kwargs)
+
+    def set_password(self, password):
+        self.password = make_password(password)
+        self.save()
+        return self

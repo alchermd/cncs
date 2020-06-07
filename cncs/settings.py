@@ -9,8 +9,10 @@ https://docs.djangoproject.com/en/3.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
-
+import logging
+import logging.config
 import os
+import sys
 
 from dotenv import load_dotenv
 
@@ -129,3 +131,8 @@ STATIC_URL = '/static/'
 
 # Custom Authentication
 AUTH_USER_MODEL = 'accounts.Account'
+
+if os.getenv('ENV') == 'dev':
+    # Use SQLite for testing
+    if 'test' in sys.argv in sys.argv:
+        DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
