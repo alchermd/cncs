@@ -9,6 +9,6 @@ router = DefaultRouter()
 router.register('snippets', views.SnippetsViewSet)
 
 urlpatterns = [
-    path('snippets/<pk>/set-password', views.set_password, name='snippet-set-password'),
+    path('snippets/<pk>/set-password/', views.set_password, name='snippet-set-password'),
     path('', include(router.urls)),
 ]
