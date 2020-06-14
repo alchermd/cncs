@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 
 from accounts.helpers import generate_tokens
 from accounts.tests.factories import AccountFactory, ApplicationFactory
-from snippets.models import Snippet
+from snippets.models import Snippet, LANGUAGE_CHOICES
 from snippets.tests.factories import SnippetFactory
 
 
@@ -142,3 +142,9 @@ class SnippetViewsTest(APITestCase):
         response = self.client.get(reverse('snippets:snippet-detail', args=[snippet.key]), **headers)
 
         self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+    def test_can_browse_all_available_language_options(self):
+        response = self.client.get(reverse('snippets:language-list'))
+
+        for language in LANGUAGE_CHOICES:
+            self.assertIn(language, response.data)

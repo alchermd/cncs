@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from accounts.helpers import get_token_owner, get_password_token
-from snippets.models import Snippet
+from snippets.models import Snippet, LANGUAGE_CHOICES
 from snippets.serializers import SnippetSerializer, PasswordSerializer
 
 
@@ -60,3 +60,10 @@ def set_password(request, pk):
         snippet.save()
         return Response(SnippetSerializer(instance=snippet, context=context).data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+@transaction.atomic()
+@api_view(['GET'])
+def language_list(request):
+    if request.method == 'GET':
+        return Response(LANGUAGE_CHOICES, status=status.HTTP_200_OK)
