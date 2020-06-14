@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     # 3rd party apps
     'oauth2_provider',
+    'corsheaders',
 
     # Django internal apps
     'django.contrib.admin',
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -136,3 +138,6 @@ if os.getenv('ENV') == 'dev':
     # Use SQLite for testing
     if 'test' in sys.argv in sys.argv:
         DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
+
+# Allow all requests. TODO: Find a stricter policy than this!
+CORS_ORIGIN_ALLOW_ALL = True
