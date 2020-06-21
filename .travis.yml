@@ -1,13 +1,13 @@
 language: python
+services:
+  - docker
 python:
   - "3.8"
-install:
-  - pip install -r requirements.txt
-services:
-  - postgresql
 before_script:
-  - psql -c 'create database cncs;' -U postgres
+  - cp .env.example .env
+  - docker-compose up -d
+  - docker-compose exec web python manage.py migrate
 script:
-  - python manage.py test
+  - docker-compose exec web python manage.py test
 env:
-  - ENV=travis DB_DATABASE=cncs DB_USER=postgres DB_PASSWORD=
+  - DOCKER_COMPOSE_VERSION=1.4.2
