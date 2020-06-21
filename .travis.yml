@@ -3,7 +3,7 @@ services:
   - docker
 python:
   - "3.8"
-before_install:
+before_script:
   - cp .env.example .env
   - docker-compose up -d
   - docker-compose exec web python manage.py migrate

@@ -136,10 +136,5 @@ STATIC_URL = '/static/'
 # Custom Authentication
 AUTH_USER_MODEL = 'accounts.Account'
 
-if os.getenv('ENV') == 'dev':
-    # Use SQLite for testing
-    if 'test' in sys.argv in sys.argv:
-        DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
-
 # Allow all requests. TODO: Find a stricter policy than this!
 CORS_ORIGIN_ALLOW_ALL = True
