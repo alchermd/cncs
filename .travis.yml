@@ -6,8 +6,8 @@ python:
 before_script:
   - cp .env.example .env
   - docker-compose up -d
-  - docker-compose exec web python manage.py migrate
+  - docker-compose exec api python manage.py migrate
 script:
-  - docker-compose exec web python manage.py test
+  - docker-compose exec api python manage.py test
 env:
   - DOCKER_COMPOSE_VERSION=1.4.2
