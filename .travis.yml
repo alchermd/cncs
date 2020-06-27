@@ -9,5 +9,6 @@ before_script:
   - docker-compose exec api python manage.py migrate
 script:
   - docker-compose exec api python manage.py test
+  - docker-compose exec web yarn test --watchAll=false
 env:
   - DOCKER_COMPOSE_VERSION=1.4.2
